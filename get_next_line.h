@@ -6,7 +6,7 @@
 /*   By: cpataki <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/09/16 16:33:15 by cpataki           #+#    #+#             */
-/*   Updated: 2019/10/12 20:12:58 by cpataki          ###   ########.fr       */
+/*   Updated: 2019/10/12 22:53:20 by cpataki          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,6 @@
 # define GNL_ERROR -1
 # define GNL_FINISH 0
 # define GNL_OK 1
-
-# define READ_ERR -1
-# define READ_OK 0
 
 typedef struct				s_gnl
 {

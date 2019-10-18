@@ -1,61 +1,49 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cpataki <marvin@42.fr>                     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/09/16 16:33:00 by cpataki           #+#    #+#             */
-/*   Updated: 2019/10/12 20:46:31 by cpataki          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+
 
 #include "get_next_line.h"
 
-char	*check_rest(char *rest, char **line)
+char	*check_rest(char *rest, char **pointer_n)
 {
-	char			*pointer_n;
+	char			*str;
 
-	pointer_n = NULL;
-	if (rest)
-		if ((pointer_n = ft_strchr(rest, '\n')))
+		if ((*pointer_n = ft_strchr(rest, '\n')))
 		{
-			*pointer_n = '\0';
-			*line = ft_strdup(rest);
-			ft_strcpy(rest, ++pointer_n);
+		    str = ft_strsub(rest, 0, *pointer_n - rest);
+			ft_strcpy(rest, ++(*pointer_n));
 		}
 		else
 		{
-			*line = ft_strdup(rest);
+			str = ft_strnew(ft_strlen(rest) + 1);
+			ft_strcat(str, rest);
 			ft_strclr(rest);
 		}
-	else
-		*line = ft_strnew(1);
-	return (pointer_n);
+	return (str);
 }
 
-int		get_line(const int fd, char **line, char **rest)
+int		get_line(const int fd, char **line, char *rest)
 {
 	char			buf[BUFF_SIZE + 1];
 	int				read_bytes;
 	char			*pointer_n;
 	char			*tmp;
 
-	pointer_n = check_rest(*rest, line);
+	pointer_n = NULL;
+	read_bytes = 1;
+	*line = check_rest(rest, &pointer_n);
 	while (!pointer_n && (read_bytes = read(fd, buf, BUFF_SIZE)))
 	{
 		buf[read_bytes] = '\0';
 		if ((pointer_n = ft_strchr(buf, '\n')))
 		{
-			*pointer_n = '\0';
-			*rest = ft_strdup(++pointer_n);
+			ft_strcpy(rest, ++pointer_n);
+			ft_strclr(--pointer_n);
 		}
 		tmp = *line;
-		if (!(*line = ft_strjoin(*line, buf)) || read_bytes < 0)
+		if (!(*line = ft_strjoin(tmp, buf)) || read_bytes < 0)
 			return (GNL_ERROR);
-		free(tmp);
+		ft_strdel(&tmp);
 	}
-	return ((read_bytes || ft_strlen(*line))
+	return ((read_bytes || ft_strlen(*line) || ft_strlen(rest))
 		? GNL_OK : GNL_FINISH);
 }
 
@@ -63,9 +51,10 @@ t_gnl	*new_list(const int fd)
 {
 	t_gnl			*new;
 
-	new = (t_gnl *)malloc(sizeof(t_gnl));
+	if (!(new = (t_gnl *)malloc(sizeof(t_gnl))))
+	    return (NULL);
 	new->fd = fd;
-	new->rest = NULL;
+	new->rest = ft_strnew(BUFF_SIZE);
 	new->next = NULL;
 	return (new);
 }
@@ -75,9 +64,9 @@ int		get_next_line(const int fd, char **line)
 	static t_gnl	*head;
 	t_gnl			*tmp;
 
-	if (fd < 0 || line == NULL)
+	if (fd < 0 || !line)
 		return (GNL_ERROR);
-	if (head == NULL)
+	if (!head)
 		head = new_list(fd);
 	tmp = head;
 	while (tmp->fd != fd)
@@ -86,5 +75,5 @@ int		get_next_line(const int fd, char **line)
 			tmp->next = new_list(fd);
 		tmp = tmp->next;
 	}
-	return (get_line(tmp->fd, line, &tmp->rest));
+	return (get_line(tmp->fd, line, tmp->rest));
 }
